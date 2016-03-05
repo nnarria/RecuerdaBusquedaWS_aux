@@ -22,6 +22,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
     @IBOutlet weak var titAutores: UILabel!
     
     var urlServicio: String = ""
+    var lstAuthors:NSArray = NSArray()
     
     var overlayView: UIView!
     var loadingIndicator: UIActivityIndicatorView!
@@ -65,8 +66,21 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
         
             let nc:UINavigationController = (self.navigationController)! as UINavigationController
             let pp: MasterViewController = nc.navigationController!.viewControllers[0] as! MasterViewController
-            pp.tituloAAgregar = tituloLibro.text
-            pp.isbnAAgregar = tfield_buscar.text!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+            let isbn_ = tfield_buscar.text!.stringByTrimmingCharactersInSet(NSCharacterSet.whitespaceCharacterSet())
+            
+            
+            var ll:[String] = [String]()
+            for element in lstAuthors {
+                let dicoAuthor = element as! NSDictionary
+                let nombre = dicoAuthor["name"] as! NSString as String
+                ll.append(nombre)
+            }
+            
+            print ("autores: \(ll)")
+            
+            pp.libroAAgregar = DataLibro (id:pp.libros.count, titulo: tituloLibro.text, isbn: isbn_, autores: ll, portada: nil)
+            
+            
         
             //self.presentViewController(pp, animated:true, completion:nil)
         
@@ -97,13 +111,13 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
         // Get the new view controller using segue.destinationViewController.
         // Pass the selected object to the new view controller.
         
-
+        /*
         let controller = segue.destinationViewController as! MasterViewController
         controller.tituloAAgregar = "ppepe"
         print("ppp")
         
         self.presentViewController(controller, animated:true, completion:nil)
-        
+        */
 
     }
     
@@ -157,10 +171,10 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
                             
                             let dico2 = dico1["ISBN:"+isbn] as! NSDictionary
                             
-                            var lstAuthors: NSArray = NSArray()
+                            //var lstAuthors: NSArray = NSArray()
                             
                             if (dico2["authors"] != nil) {
-                                lstAuthors = dico2["authors"] as! NSArray
+                                self.lstAuthors = dico2["authors"] as! NSArray
                             }
                             
                             
@@ -185,11 +199,11 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
                             
                             
                             
-                            self.titAutores.text = String(lstAuthors.count)  + " Autor(es)"
+                            self.titAutores.text = String(self.lstAuthors.count)  + " Autor(es)"
                             
                             var aux: String = ""
                             var i: Int = 1
-                            for element in lstAuthors {
+                            for element in self.lstAuthors {
                                 let dicoAuthor = element as! NSDictionary
                                 let nombre = dicoAuthor["name"] as! NSString as String
                                 

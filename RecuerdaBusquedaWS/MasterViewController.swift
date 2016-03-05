@@ -9,15 +9,36 @@
 import UIKit
 import CoreData
 
+
+struct DataLibro {
+    var id: Int
+    var titulo: String
+    var isbn: String
+    var portada:UIImage?
+    var autores: [String]
+    
+    init (id: Int, titulo: String, isbn: String, autores: [String], portada: UIImage?) {
+        self.id = id
+        self.titulo = titulo
+        self.isbn = isbn
+        self.autores = autores
+        self.portada = portada
+    }
+}
+
 class MasterViewController: UITableViewController, NSFetchedResultsControllerDelegate {
 
     var detailViewController: DetailViewController? = nil
     var managedObjectContext: NSManagedObjectContext? = nil
     
-    var tituloAAgregar:String = ""
-    var isbnAAgregar:String = ""
+    var libros:[DataLibro] = [DataLibro]()
+    
+    
+    var libroAAgregar:DataLibro? = nil
+    
 
 
+    //modif x
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
@@ -35,16 +56,12 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
         self.clearsSelectionOnViewWillAppear = self.splitViewController!.collapsed
         super.viewWillAppear(animated)
         
-        print ("Volvi: " + self.tituloAAgregar)
+        //print ("Volvi: " + (self.libroAAgregar?.isbn)!)
     
-        if (tituloAAgregar != "") {
+        if (self.libroAAgregar?.isbn != "") {
             agregarNuevoTitulo()
             
-            tituloAAgregar = ""
-            isbnAAgregar = ""
-            
             print ("titulo agregado")
-            
         }
         
         
@@ -103,9 +120,12 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showDetail" {
             if let indexPath = self.tableView.indexPathForSelectedRow {
-            let object = self.fetchedResultsController.objectAtIndexPath(indexPath)
+            //let object = self.fetchedResultsController.objectAtIndexPath(indexPath)
                 let controller = (segue.destinationViewController as! UINavigationController).topViewController as! DetailViewController
                 controller.detailItem = object
+                
+                controller.libro = self.libros[indexPath.row]
+                
                 controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem()
                 controller.navigationItem.leftItemsSupplementBackButton = true
             }
@@ -154,8 +174,37 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     func configureCell(cell: UITableViewCell, atIndexPath indexPath: NSIndexPath) {
         let object = self.fetchedResultsController.objectAtIndexPath(indexPath)
-        cell.textLabel!.text = object.valueForKey("timeStamp")!.description
+        //let peticion = object.managedObjectModel.fetchRequestTemplateForName("petBooks")
+        
+        let titulo = object.valueForKey("titulo") as! String
+        let isbn = object.valueForKey("isbn") as! String
+        var portada:UIImage = UIImage()
+        if (object.valueForKey("portada") != nil) {
+            portada = UIImage (data: object.valueForKey("portada") as! NSData)!
+        }
+        
+        let autoresEntidad = object.valueForKey("tiene") as! Set<NSObject>
+        var autores2:[String] = [String]()
+                
+        for autor in autoresEntidad {
+            autores2.append((autor.valueForKey("nombre") as! String))
+        }
+        
+        let dl = DataLibro(id: self.libros.count, titulo: titulo, isbn: isbn, autores: autores2, portada: portada)
+        
+        //libros.insert(dl, atIndex: 0)
+        libros.append(dl)
+
+
+        //cell.s
+        //cell.textLabel!.text = object.valueForKey("timeStamp")!.description
+        //cell.setValue(dl, forKey: dl.id)
+        
+        cell.textLabel!.text = titulo //object.valueForKey("timeStamp")!.description
     }
+    
+    
+    
 
     // MARK: - Fetched results controller
 
@@ -164,6 +213,36 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             return _fetchedResultsController!
         }
         
+        let fetchRequest = NSFetchRequest()
+        
+        let bookEntidad = NSEntityDescription.entityForName("Book", inManagedObjectContext: self.managedObjectContext!)
+        fetchRequest.entity = bookEntidad
+        fetchRequest.fetchBatchSize = 20
+        let sortDescriptor = NSSortDescriptor(key: "id", ascending: false)
+        fetchRequest.sortDescriptors = [sortDescriptor]
+        
+        let aFetchedResultsController = NSFetchedResultsController(fetchRequest: fetchRequest, managedObjectContext: self.managedObjectContext!, sectionNameKeyPath: nil, cacheName: "Master")
+        aFetchedResultsController.delegate = self
+        _fetchedResultsController = aFetchedResultsController
+        
+        do {
+            try _fetchedResultsController!.performFetch()
+        } catch {
+            // Replace this implementation with code to handle the error appropriately.
+            // abort() causes the application to generate a crash log and terminate. You should not use this function in a shipping application, although it may be useful during development.
+            //print("Unresolved error \(error), \(error.userInfo)")
+            //abort()
+        }
+
+        
+        
+        
+        
+        
+        
+        
+        
+        /*
         let fetchRequest = NSFetchRequest()
         // Edit the entity name as appropriate.
         let entity = NSEntityDescription.entityForName("Event", inManagedObjectContext: self.managedObjectContext!)
@@ -191,6 +270,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
              //print("Unresolved error \(error), \(error.userInfo)")
              //abort()
         }
+        */
         
         return _fetchedResultsController!
     }    
@@ -198,6 +278,7 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
 
     func controllerWillChangeContent(controller: NSFetchedResultsController) {
         self.tableView.beginUpdates()
+        
     }
 
     func controller(controller: NSFetchedResultsController, didChangeSection sectionInfo: NSFetchedResultsSectionInfo, atIndex sectionIndex: Int, forChangeType type: NSFetchedResultsChangeType) {
@@ -239,9 +320,75 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
      */
     
     
+    func crearAutoresEntidad () -> Set<NSObject> {
+        var entidades = Set<NSObject>()
+        
+        for author in (self.libroAAgregar?.autores)! {
+            let authorEntidad = NSEntityDescription.insertNewObjectForEntityForName("Author", inManagedObjectContext: self.managedObjectContext!)
+            authorEntidad.setValue(author, forKey: "nombre")
+            
+            entidades.insert(authorEntidad)
+            
+        }
+        
+        
+        return entidades
+    }
+    
+    
     func agregarNuevoTitulo () {
         
-        print ("ingreso: " + tituloAAgregar + " :: " + isbnAAgregar)
+        //print ("ingreso: " + (self.libroAAgregar?.titulo)! + " :: "( +self.libroAAgregar?.isbn))
+        
+        
+        if (self.libroAAgregar != nil) {
+            let isbn_ = self.libroAAgregar?.isbn
+        
+        
+            let bookEntidad = NSEntityDescription.entityForName("Book", inManagedObjectContext: self.managedObjectContext!)
+            let peticion = bookEntidad?.managedObjectModel.fetchRequestFromTemplateWithName("petBook", substitutionVariables: ["isbn" : isbn_!])
+        
+            do {
+                let bookEntidadAux = try self.managedObjectContext?.executeFetchRequest(peticion!)
+            
+                if (bookEntidadAux?.count > 0) {
+                    return
+                }
+            }
+            catch {
+            }
+        
+        
+        
+            /* agregar el nuevo libro */
+            let nuevoLibro = NSEntityDescription.insertNewObjectForEntityForName("Book", inManagedObjectContext: self.managedObjectContext!)
+        
+        
+        
+        
+            nuevoLibro.setValue(libroAAgregar?.titulo, forKey: "titulo")
+            nuevoLibro.setValue(libroAAgregar?.isbn, forKey: "isbn")
+            
+            if (libroAAgregar?.portada != nil) {
+                nuevoLibro.setValue(UIImagePNGRepresentation((libroAAgregar?.portada)!), forKey: "portada")
+            }
+            
+        
+            nuevoLibro.setValue(crearAutoresEntidad(), forKey: "tiene")
+        
+        
+            self.libros.append(self.libroAAgregar!)
+        
+            do {
+                try self.managedObjectContext?.save()
+            }
+            catch {
+            
+            }
+        }
+        
+        
+        /*
         
         let context = self.fetchedResultsController.managedObjectContext
         let entity = self.fetchedResultsController.fetchRequest.entity!
@@ -264,6 +411,8 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
             //print("Unresolved error \(error), \(error.userInfo)")
             abort()
         }
+
+        */
         
     }
     
