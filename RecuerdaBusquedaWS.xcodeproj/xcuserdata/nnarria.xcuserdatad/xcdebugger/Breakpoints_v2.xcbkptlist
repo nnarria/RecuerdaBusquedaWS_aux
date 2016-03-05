@@ -58,11 +58,11 @@
             ignoreCount = "0"
             continueAfterRunningActions = "No"
             filePath = "RecuerdaBusquedaWS/SearchViewController.swift"
-            timestampString = "478848971.719096"
+            timestampString = "478854291.646623"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "90"
-            endingLineNumber = "90"
+            startingLineNumber = "93"
+            endingLineNumber = "93"
             landmarkName = "agregarTitulo(_:)"
             landmarkType = "5">
          </BreakpointContent>

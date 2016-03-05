@@ -120,11 +120,32 @@ class MasterViewController: UITableViewController, NSFetchedResultsControllerDel
     override func prepareForSegue(segue: UIStoryboardSegue, sender: AnyObject?) {
         if segue.identifier == "showDetail" {
             if let indexPath = self.tableView.indexPathForSelectedRow {
-            //let object = self.fetchedResultsController.objectAtIndexPath(indexPath)
+            let object = self.fetchedResultsController.objectAtIndexPath(indexPath)
                 let controller = (segue.destinationViewController as! UINavigationController).topViewController as! DetailViewController
-                controller.detailItem = object
+                //controller.detailItem = object
                 
-                controller.libro = self.libros[indexPath.row]
+                
+                
+                let titulo = object.valueForKey("titulo") as! String
+                let isbn = object.valueForKey("isbn") as! String
+                var portada:UIImage = UIImage()
+                if (object.valueForKey("portada") != nil) {
+                    portada = UIImage (data: object.valueForKey("portada") as! NSData)!
+                }
+                
+                let autoresEntidad = object.valueForKey("tiene") as! Set<NSObject>
+                var autores2:[String] = [String]()
+                
+                for autor in autoresEntidad {
+                    autores2.append((autor.valueForKey("nombre") as! String))
+                }
+                
+                let dl = DataLibro(id: self.libros.count, titulo: titulo, isbn: isbn, autores: autores2, portada: portada)
+
+                
+                
+                
+                controller.libro = dl
                 
                 controller.navigationItem.leftBarButtonItem = self.splitViewController?.displayModeButtonItem()
                 controller.navigationItem.leftItemsSupplementBackButton = true

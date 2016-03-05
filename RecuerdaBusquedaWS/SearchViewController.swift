@@ -78,7 +78,10 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
             
             print ("autores: \(ll)")
             
-            pp.libroAAgregar = DataLibro (id:pp.libros.count, titulo: tituloLibro.text, isbn: isbn_, autores: ll, portada: nil)
+            
+            //if (self.portada.image )
+            
+            pp.libroAAgregar = DataLibro (id:pp.libros.count, titulo: tituloLibro.text, isbn: isbn_, autores: ll, portada: self.portada.image)
             
             
         

@@ -21,11 +21,16 @@ class DetailViewController: UIViewController {
 
     var libro: DataLibro!
     
+    
+    
+    
 
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
 
+        
+        
         print ("hola:\(libro.titulo)")
         
         self.tituloLibro.text? = ""+libro.titulo
@@ -40,6 +45,7 @@ class DetailViewController: UIViewController {
             i++
         }
         self.listaAutores.text = aux
+    
         
     }
     
