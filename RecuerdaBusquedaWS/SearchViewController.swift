@@ -9,6 +9,7 @@
 import UIKit
 import SystemConfiguration
 
+//hola
 
 
 
@@ -76,7 +77,7 @@ class SearchViewController: UIViewController, UISearchBarDelegate, UITextFieldDe
                 ll.append(nombre)
             }
             
-            print ("autores: \(ll)")
+            print ("Lista de autores: \(ll)")
             
             
             //if (self.portada.image )
